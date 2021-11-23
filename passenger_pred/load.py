@@ -39,7 +39,7 @@ def load_data_range(
 
 def load_alerts(list_of_files):
     all_alerts = []
-    for file_name in file_names:
+    for file_name in list_of_files:
         with open (file_name, 'r') as f:
             data = json.load(f)
             all_alerts += data
