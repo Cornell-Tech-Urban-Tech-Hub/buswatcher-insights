@@ -35,3 +35,13 @@ def load_data_range(
     df = pd.DataFrame.from_dict(rows, orient='columns')
     
     return df
+
+
+def load_alerts(list_of_files):
+    all_alerts = []
+    for file_name in file_names:
+        with open (file_name, 'r') as f:
+            data = json.load(f)
+            all_alerts += data
+    alert_df = pd.DataFrame(all_alerts)
+    return alert_df
