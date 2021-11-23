@@ -34,3 +34,9 @@ def add_time_features(df, timestamp_str="timestamp"):
     df['day'] = df['timestamp_dt'].dt.day
     df['dow'] = df['timestamp_dt'].dt.weekday
     return df
+
+def remove_unplanned_alert(alert_df):
+    id_df = alert_df.id.str.split(":", expand=True)
+    keep_index = id_df[id_df[1] == 'alert'].index
+    alert_df = alert_df.loc[keep_index]
+    return alert_df
