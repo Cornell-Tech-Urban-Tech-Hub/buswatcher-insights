@@ -29,7 +29,7 @@ def add_time_features(df, timestamp_str="timestamp"):
     String timestamp_str: name of timestamp column in df
     returns df
     """
-    df['timestamp_dt'] = pd.to_datetime(df.timestamp)
+    df['timestamp_dt'] = pd.to_datetime(df.timestamp, utc=True)
     df['hour'] = df['timestamp_dt'].dt.hour
     df['day'] = df['timestamp_dt'].dt.day
     df['dow'] = df['timestamp_dt'].dt.weekday
@@ -40,3 +40,17 @@ def remove_unplanned_alert(alert_df):
     keep_index = id_df[id_df[1] == 'alert'].index
     alert_df = alert_df.loc[keep_index]
     return alert_df
+
+def add_averages(df_train, df_test, stop_column='next_stop'):
+    mean_hour = df_train.groupby([stop_column, 'hour']).passenger_count.mean()
+    mean_dow = df_train.groupby([stop_column, 'dow']).passenger_count.mean()
+    mean_day = df_train.groupby([stop_column, 'day']).passenger_count.mean()
+    
+    df_train = df_train.join(mean_hour, on=[stop_column, 'hour'], rsuffix='_mean_hr')
+    df_train = df_train.join(mean_dow, on=[stop_column, 'dow'], rsuffix='_mean_dow')
+    df_train = df_train.join(mean_day, on=[stop_column, 'day'], rsuffix='_mean_day')
+
+    df_test = df_test.join(mean_hour, on=[stop_column, 'hour'], rsuffix='_mean_hr')
+    df_test = df_test.join(mean_dow, on=[stop_column, 'dow'], rsuffix='_mean_dow')
+    df_test = df_test.join(mean_day, on=[stop_column, 'day'], rsuffix='_mean_day')
+    return df_train, df_test
