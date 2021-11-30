@@ -1,4 +1,5 @@
 import pandas as pd
+import math
 
 def add_uid(df):
     """
@@ -54,3 +55,16 @@ def add_averages(df_train, df_test, stop_column='next_stop'):
     df_test = df_test.join(mean_dow, on=[stop_column, 'dow'], rsuffix='_mean_dow')
     df_test = df_test.join(mean_day, on=[stop_column, 'day'], rsuffix='_mean_day')
     return df_train, df_test
+
+def add_cycl_var(df, var_name, cos=True, sin=False):
+    norm = 2 * math.pi * df[var_name] / df[var_name].max()
+    if cos:
+        df["cos_" + var_name] = np.cos(norm)
+    if sin:
+        df["sin_" + var_name] = np.sin(norm)
+    return df
+
+def add_cycl_features(df, feature_names=['hour', 'day', 'dow'], cos=True, sin=False):
+    for feature in feature_names:
+        df = add_cycl_var(df, feature, cos, sin)
+    return df
