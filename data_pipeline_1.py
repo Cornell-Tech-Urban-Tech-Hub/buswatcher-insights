@@ -38,12 +38,13 @@ if __name__ == "__main__":
     years = args.years
 
     save_path = 'data/Bus/API Call'
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
     today = datetime.date.today()
     save_file = f'{route}_{today}.geojson'
 
     gdf = get_shipments(route, months=months, years=years)
 
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
     gdf.to_file(os.path.join(save_path, save_file), driver='GeoJSON')
-    print(f'api response saved to: {os.path.join(save_path, save_file)}')
+    print(f'bus data saved to: {os.path.join(save_path, save_file)}')
+    print()

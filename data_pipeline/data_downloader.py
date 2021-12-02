@@ -45,14 +45,14 @@ def get_data_dict(df, route):
                 break
     return stops_dict, delinquent_stops_dict  
 
-# solution to <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:1131)>
-# encountered at line 41 (gdf_temp = gpd.read_file(url))
-# source: https://moreless.medium.com/how-to-fix-python-ssl-certificate-verify-failed-97772d9dd14c 
-# not sure if this is kohser...
-if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)):
-    ssl._create_default_https_context = ssl._create_unverified_context
 
 def get_shipments(route, months, years):
+    # solution to <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:1131)>
+    # encountered at: gdf_temp = gpd.read_file(url)
+    # source: https://moreless.medium.com/how-to-fix-python-ssl-certificate-verify-failed-97772d9dd14c 
+    # not sure if this is kohser...
+    if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)):
+        ssl._create_default_https_context = ssl._create_unverified_context
     gdf = None
     API_BASE_URL = 'http://api.buswatcher.org'
 
@@ -62,7 +62,7 @@ def get_shipments(route, months, years):
         print(route)
         for year in years:
             for month in months:
-                for day in range(1,32):
+                for day in range(1,2):
                     if month == 2:
                         if year % 4 == 0:
                             if day > 29:
@@ -91,6 +91,7 @@ def get_shipments(route, months, years):
                             gdf = gdf_temp
     return gdf
 
+# not all of these are confirmed to be compatible with BusWatcher API (only B46, Bx12, and M15)
 mta_routes = {
     'B2',
     'B3',

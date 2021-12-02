@@ -4,11 +4,14 @@ import argparse
 import pandas as pd
 from datetime import datetime
 from experiment_pipeline.evaluation import Evaluation
-from experiment_pipeline.feature_sets import compute_stop_stats
+from experiment_pipeline.feature_engineering import compute_stop_stats
 from experiment_pipeline.feature_sets import (
-    bus_pos_and_obs_time, 
+    bus_pos_and_obs_time,
+    bus_features, 
     bus_features_with_stop_stats, 
-    bus_and_weather_features_with_stop_stats
+    bus_and_weather_features,
+    bus_and_weather_features_with_stop_stats,
+    normalized_and_encoded_bus_and_weather_features_with_stop_stats
 )
 from experiment_pipeline.utils import custom_train_test_split
 from sklearn.linear_model import Lasso
@@ -113,15 +116,13 @@ def load_pickled_experiment(location):
     with open(location, "rb") as f:
         loaded_experiment = pickle.load(f)
 
-    return (
-        Evaluation(
-            global_feature_set=loaded_experiment["global_feature_set"], 
-            train=loaded_experiment["train"], 
-            test=loaded_experiment["test"], 
-            stop_id_ls=loaded_experiment["stop_id_ls"], 
-            stop_stats=loaded_experiment["stop_stats"]
-        ),
-        loaded_experiment["model"]
+    return Evaluation(
+        global_feature_set=loaded_experiment["global_feature_set"], 
+        train=loaded_experiment["train"], 
+        test=loaded_experiment["test"], 
+        stop_id_ls=loaded_experiment["stop_id_ls"], 
+        stop_stats=loaded_experiment["stop_stats"],
+        model=loaded_experiment["model"]
     )
         
 
@@ -150,7 +151,6 @@ parser.add_argument(
     help='The route direction, i.e. 0 or 1',
     type=int
 )
-
 
 parser.add_argument(
     '-r',
@@ -192,8 +192,8 @@ if __name__ == "__main__":
     ## run experiment
     experiment_eval = run_experiment(
         global_feature_set=df_route,
-        feature_extractor_fn=bus_features_with_stop_stats,
-        model=Lasso(alpha=0.05),
+        feature_extractor_fn=bus_and_weather_features,
+        model=XGBRegressor(learning_rate=0.1, max_depth=4, n_estimators=64, random_state=0),
         stop_id_ls=stop_id_ls,
         dependent_variable="passenger_count",
         split_heuristic="datetime",
