@@ -1,5 +1,6 @@
 import pandas as pd
 import math
+import numpy as np
 
 def add_uid(df):
     """
@@ -67,4 +68,13 @@ def add_cycl_var(df, var_name, cos=True, sin=False):
 def add_cycl_features(df, feature_names=['hour', 'day', 'dow'], cos=True, sin=False):
     for feature in feature_names:
         df = add_cycl_var(df, feature, cos, sin)
+    return df
+
+def fill_zero_passengers(df, threshold=0.95):
+    df.passenger_count = df.passenger_count.fillna("None")
+    df_share_of_none = df.groupby("uid").passenger_count.apply(
+        lambda x: x[x == "None"].count()
+    ) / df.groupby("uid").passenger_count.size()
+    fill_trips = df_share_of_none[df_share_of_none < threshold].index
+    df.loc[(df.uid.isin(fill_trips) & (df.passenger_count == "None")), 'passenger_count'] = 0
     return df
