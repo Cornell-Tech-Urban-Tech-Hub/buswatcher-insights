@@ -19,10 +19,12 @@ def compute_stop_stats(train, test):
 
 def normalize(train, test):
     scaler = MinMaxScaler()
-    scaler.fit(train)
-    train = pd.DataFrame(scaler.transform(train), index=train.index, columns=train.columns)
-    test = pd.DataFrame(scaler.transform(test), index=test.index, columns=test.columns)
-    return train, test
+    scaler.fit(train)   
+    normalized_train = pd.DataFrame(scaler.transform(train), index=train.index, columns=train.columns)
+    normalized_test = pd.DataFrame(scaler.transform(test), index=test.index, columns=test.columns)
+    for col in train.columns:
+        train[col] = normalized_train[col]
+        test[col] = normalized_test[col]
 
 def encode_cyclical_time_features(train, test, drop_cols=True):
     if drop_cols:

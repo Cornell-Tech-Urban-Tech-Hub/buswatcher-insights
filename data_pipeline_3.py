@@ -11,7 +11,8 @@ from data_pipeline.data_processing import (
     remove_delinquent_stops,
     add_stop_positions,
     add_estimated_seconds_to_next_stop,
-    fill_nan_estimated_seconds_to_next_stop
+    fill_nan_estimated_seconds_to_next_stop,
+    remove_stops_not_in_stops_dict
 ) 
 
 parser = argparse.ArgumentParser()
@@ -43,6 +44,7 @@ if __name__ == "__main__":
     remove_unique_trip_ids_with_high_pct_nan_passenger_count_readings(df, 1.0)
     stops_dict, delinquent_stops_dict = get_data_dict(df, route)
     remove_delinquent_stops(df, delinquent_stops_dict)
+    remove_stops_not_in_stops_dict(df, stops_dict)
     add_stop_positions(df, stops_dict)
     add_estimated_seconds_to_next_stop(df)
     fill_nan_estimated_seconds_to_next_stop(df)

@@ -59,6 +59,22 @@ def bus_features(train, test, dependent_variable, stop_stats):
     test_y = test[dependent_variable]
     return train_x, train_y, test_x, test_y
 
+def normalized_bus_features(train, test, dependent_variable, stop_stats):
+    # select features
+    feature_set_bus = bus_features_ls
+    feature_set_weather = []
+    feature_set = feature_set_bus + feature_set_weather + [dependent_variable]
+    non_features = list(set(train.columns) - set(feature_set))
+    train.drop(columns=non_features, inplace=True)
+    test.drop(columns=non_features, inplace=True)
+    normalize(train, test)
+    # partition
+    train_x = train.drop(columns=[dependent_variable])
+    train_y = train[dependent_variable]
+    test_x = test.drop(columns=[dependent_variable])
+    test_y = test[dependent_variable]
+    return train_x, train_y, test_x, test_y
+
 def bus_features_with_stop_stats(train, test, dependent_variable, stop_stats):
     # select features
     feature_set_bus = bus_features_ls

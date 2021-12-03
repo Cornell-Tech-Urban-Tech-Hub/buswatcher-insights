@@ -30,7 +30,16 @@ def remove_delinquent_stops(df, delinquent_stops_dict):
     for direction in [0, 1]:
         for delinquent_stop in delinquent_stops_dict[direction]:
             drop = df[df['next_stop_id'] == delinquent_stop].index 
-            df.drop(index=drop, inplace=True) 
+            df.drop(index=drop, inplace=True)
+        
+def remove_stops_not_in_stops_dict(df, stops_dict):
+    for direction in [0, 1]:
+        df_stops = set(df[df['direction'] == direction]['next_stop_id'])
+        direction_stops = set(stops_dict[direction])
+        for df_stop in df_stops:
+            if df_stop not in direction_stops:
+                drop = df[df['next_stop_id'] == df_stop].index 
+                df.drop(index=drop, inplace=True)
 
 def add_stop_positions(df, stops_dict):
     # zip direction and next_stop_id to look up position of next_stop_id along appropriate route stop sequence

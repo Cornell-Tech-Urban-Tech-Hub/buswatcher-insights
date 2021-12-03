@@ -390,7 +390,7 @@ class Evaluation:
     model = self.model
     if isinstance(model, RandomForestRegressor) or isinstance(model, XGBRegressor):
       importances = model.feature_importances_
-    elif isinstance(model, LinearRegression) or isinstance(model, Lasso) or isinstance(model, LassoCV) or isinstance(model, Ridge) or isinstance(model, Ridge) or isinstance(model, SVR):
+    elif isinstance(model, LinearRegression) or isinstance(model, Lasso) or isinstance(model, LassoCV) or isinstance(model, Ridge) or isinstance(model, RidgeCV) or isinstance(model, SVR):
       importances = np.abs(model.coef_)
     model_importances = pd.Series(importances, index=train_x.columns)
     model_importances = model_importances.sort_values(ascending=False)

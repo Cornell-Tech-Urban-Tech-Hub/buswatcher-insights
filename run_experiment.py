@@ -14,9 +14,17 @@ from experiment_pipeline.feature_sets import (
     normalized_and_encoded_bus_and_weather_features_with_stop_stats
 )
 from experiment_pipeline.utils import custom_train_test_split
-from sklearn.linear_model import Lasso
-from xgboost import XGBRegressor
 from experiment_pipeline.data_loader import load_global_feature_set
+from sklearn.linear_model import (
+  LinearRegression, 
+  Lasso, 
+  LassoCV, 
+  Ridge,
+  RidgeCV
+)
+from sklearn.svm import SVR
+from sklearn.ensemble import RandomForestRegressor
+from xgboost import XGBRegressor
 
 def run_experiment(
     global_feature_set,
