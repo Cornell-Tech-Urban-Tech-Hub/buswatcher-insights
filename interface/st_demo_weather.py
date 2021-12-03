@@ -54,6 +54,11 @@ def st_demo_weather():
 
     st.dataframe(eval_xg_bus_weather.train.head())
 
+    st.write("""
+    We sourced our weather data from the station at JFK, which we accessed through the [VisualCrossing Weather API](https://www.visualcrossing.com/weather-api)
+    and joined with the cleaned and processed BusWatcher data on the DateTime column of each dataframe. 
+    """)
+
     st.write(f"""
         ### Model Selection
         #### Linear
