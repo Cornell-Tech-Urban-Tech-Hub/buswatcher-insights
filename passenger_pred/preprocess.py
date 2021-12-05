@@ -35,6 +35,7 @@ def add_time_features(df, timestamp_str="timestamp"):
     df['hour'] = df['timestamp_dt'].dt.hour
     df['day'] = df['timestamp_dt'].dt.day
     df['dow'] = df['timestamp_dt'].dt.weekday
+    df['total_minutes'] = df['timestamp_dt'].dt.minute + 60 * df['timestamp_dt'].dt.hour
     return df
 
 def remove_unplanned_alert(alert_df):
@@ -65,7 +66,7 @@ def add_cycl_var(df, var_name, cos=True, sin=False):
         df["sin_" + var_name] = np.sin(norm)
     return df
 
-def add_cycl_features(df, feature_names=['hour', 'day', 'dow'], cos=True, sin=False):
+def add_cycl_features(df, feature_names=['hour', 'day', 'dow', 'total_minutes'], cos=True, sin=False):
     for feature in feature_names:
         df = add_cycl_var(df, feature, cos, sin)
     return df
