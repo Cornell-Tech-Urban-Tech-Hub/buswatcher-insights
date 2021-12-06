@@ -47,8 +47,11 @@ def st_demo_weather():
 
     st.write("""
         ## Motivation
-        The motivation behind a lot of this work was to understand how severe weather impacts bus ridership in NYC. Let’s see 
-        how the tools we developed can be used to gain insight into that question.
+        The motivation behind a lot of this work was to understand how severe weather impacts bus ridership in NYC. The specific task we are 
+        training our model to perform is the prediction of the number of passengers on a specific vehicle at a specific time and place. The 
+        investigations presented in this demo are common situations in a data science workflow. Data Auditing, Feature Selection, Model Selection, 
+        and Error Analysis can all be performed discretely and evaluated visually. Let's see how these tools can be used to gain insight into our 
+        primary research question.
     """)
 
     st.write("""
@@ -65,13 +68,10 @@ def st_demo_weather():
     """)
 
     st.write("""
-        ### An Aside on the Prediction Task
-        Just to we are all on the same page, the specific task we are training our model to perform is the prediction of the number 
-        of passengers on a specific vehicle at a specific time and place. To help illustrate that, here are the first five rows of 
-        the combined bus and weather training data.
+        ### The Data
     """)
 
-    st.dataframe(eval_xg_bus_weather.train.head())
+    st.dataframe(eval_xg_bus_weather.train.drop(columns='passenger_count_pred').head())
 
     st.write("""
     We sourced our weather data from the station at JFK, which we accessed through the [VisualCrossing Weather API](https://www.visualcrossing.com/weather-api)
@@ -81,7 +81,7 @@ def st_demo_weather():
     st.write(f"""
         ### Model Selection
         #### Linear
-        Our first attempt at establishing a baseline model was to train a first-degree, L1-regularized linear regressor the first 6 of 
+        Our first attempt at establishing a baseline model was to train an unregularized first-degree linear regressor on the first 6 of 
         our 8 weeks of bus data, then test on the final 2 weeks. To evaluate performance, we looked primarily at mean absolute error (MAE) 
         on basis of interpretability with respect to the prediction task at hand (i.e., how many people are currently on the bus). 
         Overall, our linear model performed surprisingly well for a baseline, with an MAE of {lr_bus_MAE:.1f} on the test set, meaning 
@@ -97,7 +97,7 @@ def st_demo_weather():
 
     st.write("""
         However, that’s not all we care about when evaluating the performance of a regression model. We also want to understand how well it 
-        captures the variance in the data. We can see below that our baseline struggles mightily here.
+        captures the variance in the data. We can see below that our baseline struggles with this.
     """)
 
     fig_weekday, fig_weekend, fig_datetime = st_plot_passenger_count_by_time_of_day(eval_lr_bus, 'train', segment=None, agg='mean')
@@ -179,15 +179,10 @@ def st_demo_weather():
     st.dataframe(summary_results)
 
     st.write("""
-        What we find is that adding weather features actually diminishes our model’s predictive capacity—how disappointing!
+        What we find is that adding weather features actually diminishes our model’s predictive capacity—let’s 
+        try to reason about what’s going on…
 
-        Now, if, hypothetically speaking, you were trying to predict bus occupancy using time, location, and weather data for a course project, 
-        you might consider, instead, shifting the focus of your work toward the development of an open-source repo that others can use to push 
-        the ball forward, for example. :P
-
-        But let’s be good sports about it and try and gain some insight into what’s going on…
-
-        A good place to start would be to look at the correlations that exist between the various features:
+        A good place to start would be to examine at the correlations that exist between the various features:
     """)
     
     bus_features_ls = [
@@ -247,10 +242,9 @@ def st_demo_weather():
 
     st.write("""
         The upshot is that not only are weather features of minimal importance to our baseline, it can achieve essentially peak performance using 
-        only just time and location!
+        just time and location!
     
-        But why is this? Intuitively, weather should have some impact on bus ridership. To help gain some insight into what is going on, let’s 
-        look at our training and testing data:
+        But why is this? Intuitively, weather should have some impact on bus ridership. Examining our training and testing data may provide insight:
     """)
 
     st.write("""
@@ -265,7 +259,7 @@ def st_demo_weather():
     fig_weekday, fig_weekend, fig_datetime = st_gt_pred_scatter(eval_xg_bus_weather, 'test', plot='datetime', errors='large', n=1000, s=0, y_axis='gt', overlay_weather=True)
     st.write(fig_datetime)
     st.write("""
-        We can see that a potential issue from an evaluation perspective is that there are very few weather events in our testing data! 
+        Indeed, we can see that a potential issue from an evaluation perspective is that there are very few weather events in our testing data! 
         How is a model that learns, for example, that fewer people take the bus on hot and humid days supposed to perform on a test set that 
         doesn’t have any hot and humid days?
         
