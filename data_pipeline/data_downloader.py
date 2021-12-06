@@ -50,7 +50,6 @@ def get_shipments(route, months, years):
     # solution to <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:1131)>
     # encountered at: gdf_temp = gpd.read_file(url)
     # source: https://moreless.medium.com/how-to-fix-python-ssl-certificate-verify-failed-97772d9dd14c 
-    # not sure if this is kohser...
     if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)):
         ssl._create_default_https_context = ssl._create_unverified_context
     gdf = None
