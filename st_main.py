@@ -31,12 +31,11 @@ def render_landing_page():
         Use the navigation on the left to learn more or explore experiment demos.
     """)
 
+    st.write("**[Github repository](https://github.com/Cornell-Tech-Urban-Tech-Hub/buswatcher-insights/)**")
+
     st.write("""
         ### Workflow
     """)
-
-    st.write("**[Github repository](https://github.com/Cornell-Tech-Urban-Tech-Hub/buswatcher-insights/)**")
-
 
     st.image("./interface/images/workflow.png")
 
