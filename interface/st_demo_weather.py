@@ -294,7 +294,7 @@ def st_demo_weather():
     n = st.selectbox("Number", options=[5000, 1000, 500, 100, 50], key=2)
     y_axis = st.selectbox("Y Axis", options=['Ground Truth', 'Prediction'])
     y_axis = y_axis_dict[y_axis]
-    fig_weekday, fig_weekend, fig_datetime = eval_xg_bus_weather.gt_pred_scatter(data=data, plot=plot, errors=errors, n=n, y_axis=y_axis)
+    fig_weekday, fig_weekend, fig_datetime = eval_xg_bus_weather.gt_pred_scatter(data=data, plot=plot, errors=errors, n=n, y_axis=y_axis, overlay_weather=True)
     if plot == 'datetime':
         st.write(fig_datetime)
     else:

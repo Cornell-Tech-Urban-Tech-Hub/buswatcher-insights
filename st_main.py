@@ -5,18 +5,29 @@ from interface. st_eval_harness import st_eval_harness
 
 # Main page
 def render_landing_page():
-    st.subheader("Landing page")
-    st.write("Todo: write a description of the project")
+    st.write("""
+        **BusWatcher Insights** is an open-source project which
+        aims to build a set of tools for analyzing and predicting bus passenger counts in New York City,
+        powered by [NYC BusWatcher](https://github.com/Cornell-Tech-Urban-Tech-Hub/nycbuswatcher) and
+        other publicly available Urban data sources.
+        It is an open-source collaboration between students at Cornell Tech 
+    and the Urban Tech Hub.
+    """)
 
-    st.write("We open source a repository for working with the NYC bus data, etc...")
+    st.write("""
+        The [public repository](https://github.com/Cornell-Tech-Urban-Tech-Hub/buswatcher-insights/) is a set up to showcase the best performing models and
+        give insight into experiments. It provides utility methods for fetching data, 
+        running experiments for building prediction models and a standardized evaluation suite.
+    """)
 
-    st.write("Something about the experiments we want to run, i.e. adding weather data.")
-
+    st.write("""
+        Use the navigation on the left to learn more or explore experiment demos.
+    """)
 
     st.write("**[Github repository](https://github.com/Cornell-Tech-Urban-Tech-Hub/buswatcher-insights/)**")
 
 PAGES = {
-    "Landing page": render_landing_page,
+    "Introduction": render_landing_page,
     "Data Pipeline": st_data,
     "Experiment & Evaluation Harness": st_eval_harness,
     "Demo: Weather Data": st_demo_weather,

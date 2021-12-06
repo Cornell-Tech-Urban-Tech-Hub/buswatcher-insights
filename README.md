@@ -1,4 +1,7 @@
-# Bus Passenger Count Modeling
+# BusWatcher Insights
+**BusWatcher Insights** is an open-source project which aims to build a set of tools for analyzing and predicting bus passenger counts in New York City, powered by [NYC BusWatcher](https://github.com/Cornell-Tech-Urban-Tech-Hub/nycbuswatcher) and other publicly available Urban data sources. It is an open-source collaboration between students at Cornell Tech and [the Urban Tech Hub](https://urban.tech.cornell.edu/).
+
+This repository provides utility methods for fetching data, running experiments for building prediction models and a standardized evaluation suite.
 ## Install package
 Locally, install the `passenger_pred` package by first cloning this repository, and then running the following command:
 `pip install -e .`
