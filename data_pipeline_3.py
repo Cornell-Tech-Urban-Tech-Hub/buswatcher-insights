@@ -30,7 +30,7 @@ if __name__ == "__main__":
     read_file = args.read_file
     route = read_file.split('_')[0]
     save_file_processed = read_file
-    save_file_stops = route + '.json'
+    save_file_stops = route + '_stops' + '.json'
     read_path = 'data/Bus/Segment Data - Raw'
     save_path_processed = 'data/Bus/Segment Data - Processed'
     save_path_stops = 'data/Bus/Route Data'
