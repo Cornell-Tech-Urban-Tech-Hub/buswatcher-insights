@@ -1,14 +1,33 @@
 import streamlit as st
 import pandas as pd
-from run_experiment import load_pickled_experiment
+from experiment_pipeline.evaluation import Evaluation
+from interface.st_utils import st_load_experiment
 
 SAVED_EXPERIMENT_DIR = "saved_experiments/"
-DATA_DIR = "data/streamlit/"
+
+"""
+    Below we create a proxy for the evaluation method classes
+    which adds Streamlit caching functionality for performance.
+
+    Read more here: https://blog.streamlit.io/new-experimental-primitives-for-caching/
+"""
+@st.experimental_singleton
+def st_feature_importance(_eval: Evaluation, ablate_features):
+    return _eval.plot_feature_importance(ablate_features, use_plotly=True)
+
+@st.experimental_singleton
+def st_plot_passenger_count_by_time_of_day(_eval: Evaluation, data, segment=None, agg='sum'):
+    return _eval.plot_passenger_count_by_time_of_day(data, segment=segment, agg=agg, use_plotly=True)
+
+@st.experimental_singleton
+def st_gt_pred_scatter(_eval: Evaluation, data, plot='simple', errors='all', n=1000, s=100, y_axis='gt', overlay_weather=False):
+    return _eval.gt_pred_scatter(data, plot, errors, n, s, y_axis, overlay_weather)
+
 
 def st_demo_weather():
-    eval_lr_bus = load_pickled_experiment(SAVED_EXPERIMENT_DIR + 'Linear-Bus.pickle')
-    eval_xg_bus = load_pickled_experiment(SAVED_EXPERIMENT_DIR + 'XGBoost-Bus.pickle')
-    eval_xg_bus_weather = load_pickled_experiment(SAVED_EXPERIMENT_DIR + 'XGBoost-BusWeather.pickle')
+    eval_lr_bus = st_load_experiment('Linear-Bus.pickle')
+    eval_xg_bus = st_load_experiment('XGBoost-Bus.pickle')
+    eval_xg_bus_weather = st_load_experiment('XGBoost-BusWeather.pickle')
 
     lr_bus_pred_metrics, mean_pred_metrics = eval_lr_bus.regression_metrics("test", pretty_print=False)
     xg_bus_pred_metrics, _ = eval_xg_bus.regression_metrics("test", pretty_print=False)
@@ -72,7 +91,7 @@ def st_demo_weather():
         Indeed, we can see our model does a pretty good job of capturing the ebb end flow of ridership over the course of a day.
     """)
 
-    fig_weekday, fig_weekend, fig_datetime = eval_lr_bus.plot_passenger_count_by_time_of_day('train', segment=None, agg='sum')
+    fig_weekday, fig_weekend, fig_datetime = st_plot_passenger_count_by_time_of_day(eval_lr_bus, 'train', segment=None, agg='sum')
     st.write(fig_weekday)
     st.write(fig_weekend)
 
@@ -81,7 +100,7 @@ def st_demo_weather():
         captures the variance in the data. We can see below that our baseline struggles mightily here.
     """)
 
-    fig_weekday, fig_weekend, fig_datetime = eval_lr_bus.plot_passenger_count_by_time_of_day('train', segment=None, agg='mean')
+    fig_weekday, fig_weekend, fig_datetime = st_plot_passenger_count_by_time_of_day(eval_lr_bus, 'train', segment=None, agg='mean')
     st.write(fig_weekday)
     st.write(fig_weekend)
     
@@ -116,7 +135,7 @@ def st_demo_weather():
     
     agg = st.selectbox("Aggregation Method", options=['Sum', 'Mean'])
     agg = agg.lower()
-    fig_weekday, fig_weekend, fig_datetime = eval_xg_bus.plot_passenger_count_by_time_of_day('test', segment=None, agg=agg)
+    fig_weekday, fig_weekend, fig_datetime = st_plot_passenger_count_by_time_of_day(eval_xg_bus, 'test', segment=None, agg=agg)
     st.write(fig_weekday)
     st.write(fig_weekend)
 
@@ -130,7 +149,7 @@ def st_demo_weather():
     segment = eval_xg_bus.stop_id2stop_pos[segment]
     agg = st.selectbox("Aggregation Method", options=['Mean', 'Sum'])
     agg = agg.lower()
-    fig_weekday, fig_weekend, fig_datetime = eval_xg_bus.plot_passenger_count_by_time_of_day('test', segment=segment, agg=agg)
+    fig_weekday, fig_weekend, fig_datetime = st_plot_passenger_count_by_time_of_day(eval_xg_bus, 'test', segment=segment, agg=agg)
     st.write(fig_weekday)
     st.write(fig_weekend)
 
@@ -215,14 +234,14 @@ def st_demo_weather():
         of XGBoost, is a measure of information gain:
     """)
     
-    importance, mae, me, r2 = eval_xg_bus_weather.plot_feature_importance(ablate_features=False)
+    importance, mae, me, r2 = st_feature_importance(eval_xg_bus_weather, ablate_features=False)
     st.write(importance)
 
     st.write("""
         Going a step further, we can see how each the inclusion of each successive feature improves or diminishes model performance:
     """)
 
-    importance, mae, me, r2 = eval_xg_bus_weather.plot_feature_importance(ablate_features=True)
+    importance, mae, me, r2 = st_feature_importance(eval_xg_bus_weather, ablate_features=True)
     st.write(mae)
     st.write(r2)
 
@@ -237,13 +256,13 @@ def st_demo_weather():
     st.write("""
         ### Train
     """)
-    fig_weekday, fig_weekend, fig_datetime = eval_xg_bus_weather.gt_pred_scatter('train', plot='datetime', errors='large', n=1000, s=0, y_axis='gt', overlay_weather=True)
+    fig_weekday, fig_weekend, fig_datetime = st_gt_pred_scatter(eval_xg_bus_weather, 'train', plot='datetime', errors='large', n=1000, s=0, y_axis='gt', overlay_weather=True)
     st.write(fig_datetime)
 
     st.write("""
         ### Test
     """)
-    fig_weekday, fig_weekend, fig_datetime = eval_xg_bus_weather.gt_pred_scatter('test', plot='datetime', errors='large', n=1000, s=0, y_axis='gt', overlay_weather=True)
+    fig_weekday, fig_weekend, fig_datetime = st_gt_pred_scatter(eval_xg_bus_weather, 'test', plot='datetime', errors='large', n=1000, s=0, y_axis='gt', overlay_weather=True)
     st.write(fig_datetime)
     st.write("""
         We can see that a potential issue from an evaluation perspective is that there are very few weather events in our testing data! 
@@ -272,7 +291,7 @@ def st_demo_weather():
     errors = st.selectbox("Errors", options=['Large', 'Small', 'All'], key=1)
     errors = errors.lower()
     n = st.selectbox("Number", options=[5000, 1000, 500, 100, 50], key=1)
-    fig_weekday, fig_weekend, fig_datetime = eval_xg_bus_weather.gt_pred_scatter(data=data, plot='simple', errors=errors, n=n)
+    fig_weekday, fig_weekend, fig_datetime = st_gt_pred_scatter(eval_xg_bus_weather, data=data, plot='simple', errors=errors, n=n)
     st.write(fig_weekday)
     st.write(fig_weekend)
 
@@ -294,7 +313,7 @@ def st_demo_weather():
     n = st.selectbox("Number", options=[5000, 1000, 500, 100, 50], key=2)
     y_axis = st.selectbox("Y Axis", options=['Ground Truth', 'Prediction'])
     y_axis = y_axis_dict[y_axis]
-    fig_weekday, fig_weekend, fig_datetime = eval_xg_bus_weather.gt_pred_scatter(data=data, plot=plot, errors=errors, n=n, y_axis=y_axis, overlay_weather=True)
+    fig_weekday, fig_weekend, fig_datetime = st_gt_pred_scatter(eval_xg_bus_weather, data=data, plot=plot, errors=errors, n=n, y_axis=y_axis, overlay_weather=True)
     if plot == 'datetime':
         st.write(fig_datetime)
     else:

@@ -23,6 +23,11 @@ from sklearn.linear_model import (
 from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
+import plotly.graph_objects as go
+import plotly.express as px
+
+COLOR_GROUND_TRUTH = 'darkorange'
+COLOR_PREDICTION = 'navy'
 
   
 def is_crowded(stop_id_pos, passenger_counts, stop_stats, method='mean', num_classes=2, spread_multiple=1):
@@ -161,7 +166,7 @@ class Evaluation:
       return bal_acc, cr_dict, cm
 
   
-  def plot_passenger_count_by_time_of_day(self, data, segment=None, agg='sum'):
+  def plot_passenger_count_by_time_of_day(self, data, segment=None, agg='sum', use_plotly=False):
     if data == 'train':
       df = self.global_feature_set_train.copy()
     elif data == 'val':
@@ -181,17 +186,39 @@ class Evaluation:
         if (day_type in set(gt.columns)) and (day_type in set(pred.columns)):
           gt_day_type = gt[day_type]
           pred_day_type = pred[day_type]
-          fig, ax = plt.subplots(figsize=(20, 10))
-          ax.plot(gt.index, gt_day_type, label='Ground Truth', color='darkorange')
-          ax.plot(pred.index, pred_day_type, label='Prediction', color='navy')
-          ax.set_xticks(hours)
-          ax.set_xlabel('Time of Day')
-          ax.set_ylabel('Passenger Count')
-          ax.set_title(day_type)
-          plt.legend()
-          fig.tight_layout()
-          fig_dict[day_type] = fig
-          plt.show()
+          if use_plotly:
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+              x=gt.index, 
+              y=gt_day_type,
+              mode='lines',
+              name='Ground Truth',
+              marker_color=COLOR_GROUND_TRUTH
+            ))
+            fig.add_trace(go.Scatter(
+              x=pred.index, 
+              y=pred_day_type,
+              mode='lines',
+              name='Prediction',
+              marker_color=COLOR_PREDICTION
+            ))
+            fig.update_layout(
+              xaxis_title='Time of Day',
+              yaxis_title='Passenger Count'
+            )
+            fig_dict[day_type] = fig
+          else:
+            fig, ax = plt.subplots(figsize=(20, 10))
+            ax.plot(gt.index, gt_day_type, label='Ground Truth', color=COLOR_GROUND_TRUTH)
+            ax.plot(pred.index, pred_day_type, label='Prediction', color=COLOR_PREDICTION)
+            ax.set_xticks(hours)
+            ax.set_xlabel('Time of Day')
+            ax.set_ylabel('Passenger Count')
+            ax.set_title(day_type)
+            plt.legend()
+            fig.tight_layout()
+            fig_dict[day_type] = fig
+            plt.show()
     elif agg == 'mean':
       gt_avg = df.groupby([df['timestamp'].dt.hour, 'day_type'])['passenger_count'].mean().unstack()
       gt_std = df.groupby([df['timestamp'].dt.hour, 'day_type'])['passenger_count'].std().unstack()
@@ -203,19 +230,59 @@ class Evaluation:
           gt_weekday_std = gt_std[day_type]
           pred_weekday_avg = pred_avg[day_type]
           pred_weekday_std = pred_std[day_type]
-          fig, ax = plt.subplots(figsize=(20, 10))
-          ax.plot(gt_avg.index, gt_weekday_avg, label='Ground Truth', color='darkorange')
-          ax.fill_between(gt_avg.index, gt_weekday_avg - gt_weekday_std, gt_weekday_avg + gt_weekday_std, alpha=0.2, color='darkorange', lw=2)
-          ax.plot(pred_avg.index, pred_weekday_avg, label='Prediction', color='navy')
-          ax.fill_between(pred_avg.index, pred_weekday_avg - pred_weekday_std, pred_weekday_avg + pred_weekday_std, alpha=0.2, color='navy', lw=2)
-          ax.set_xticks(hours)
-          ax.set_xlabel('Time of Day')
-          ax.set_ylabel('Passenger Count')
-          ax.set_title(day_type)
-          plt.legend()
-          fig.tight_layout()
-          fig_dict[day_type] = fig
-          plt.show()
+          if use_plotly:
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+              x=gt_avg.index, 
+              y=gt_weekday_avg,
+              mode='lines',
+              name='Ground Truth',
+              marker_color=COLOR_GROUND_TRUTH
+            ))
+            fig.add_trace(go.Scatter(
+                x=np.concatenate([gt_avg.index, gt_avg.index[::-1]]),
+                y=pd.concat([gt_weekday_avg - gt_weekday_std, (gt_weekday_avg + gt_weekday_std)[::-1]]),
+                fill='toself',
+                opacity=0.2,
+                hoveron='points',
+                name='Ground Truth Variance',
+                fillcolor=COLOR_GROUND_TRUTH
+            ))
+            fig.add_trace(go.Scatter(
+              x=pred_avg.index, 
+              y=pred_weekday_avg,
+              mode='lines',
+              name='Prediction',
+              marker_color=COLOR_PREDICTION
+            ))
+            fig.add_trace(go.Scatter(
+                x=np.concatenate([pred_avg.index, pred_avg.index[::-1]]),
+                y=pd.concat([pred_weekday_avg - pred_weekday_std, (pred_weekday_avg + pred_weekday_std)[::-1]]),
+                fill='toself',
+                opacity=0.2,
+                hoveron='points',
+                name='Prediction Variance',
+                fillcolor=COLOR_PREDICTION
+            ))
+            fig.update_layout(
+              xaxis_title='Time of Day',
+              yaxis_title='Passenger Count'
+            )
+            fig_dict[day_type] = fig
+          else:
+            fig, ax = plt.subplots(figsize=(20, 10))
+            ax.plot(gt_avg.index, gt_weekday_avg, label='Ground Truth', color=COLOR_GROUND_TRUTH)
+            ax.fill_between(gt_avg.index, gt_weekday_avg - gt_weekday_std, gt_weekday_avg + gt_weekday_std, alpha=0.2, color=COLOR_GROUND_TRUTH, lw=2)
+            ax.plot(pred_avg.index, pred_weekday_avg, label='Prediction', color=COLOR_PREDICTION)
+            ax.fill_between(pred_avg.index, pred_weekday_avg - pred_weekday_std, pred_weekday_avg + pred_weekday_std, alpha=0.2, color=COLOR_PREDICTION, lw=2)
+            ax.set_xticks(hours)
+            ax.set_xlabel('Time of Day')
+            ax.set_ylabel('Passenger Count')
+            ax.set_title(day_type)
+            plt.legend()
+            fig.tight_layout()
+            fig_dict[day_type] = fig
+            plt.show()
     return fig_dict['Weekday'], fig_dict['Weekend'], fig_dict['DateTime']
 
 
@@ -248,10 +315,10 @@ class Evaluation:
           fig, ax = plt.subplots(figsize=(20, 20))
           gt = df[df['day_type'] == day_type]['passenger_count']
           pred = df[df['day_type'] == day_type]['passenger_count_pred']
-          ax.scatter(pred, gt, s=s, marker='o', color='navy', alpha=0.25)
+          ax.scatter(pred, gt, s=s, marker='o', color=COLOR_PREDICTION, alpha=0.25)
           ax.set_xlim([min(gt.min(), pred.min()) - 5, max(gt.max(), pred.max()) + 5])
           ax.set_ylim([min(gt.min(), pred.min()) - 5, max(gt.max(), pred.max()) + 5])
-          ax.plot(ax.get_xlim(), ax.get_xlim(), color='darkorange', scalex=False, scaley=False)
+          ax.plot(ax.get_xlim(), ax.get_xlim(), color=COLOR_GROUND_TRUTH, scalex=False, scaley=False)
           ax.set_xlabel('Predicted Passenger Count')
           ax.set_ylabel('Ground Truth Passenger Count')
           ax.set_title(day_type)
@@ -274,13 +341,13 @@ class Evaluation:
           over_est_errors = over_est_df['pred_abs_error']
           if y_axis == 'gt':
             over_est_ss = [s * max(1, error) for error in over_est_errors]
-            ax.scatter(over_est_col_obs, over_est_gt, s=over_est_ss, marker='o', label='Prediction', color='navy')
-            ax.scatter(over_est_col_obs, over_est_gt, s=s, marker='o', label='Ground Truth', color='darkorange')
+            ax.scatter(over_est_col_obs, over_est_gt, s=over_est_ss, marker='o', label='Prediction', color=COLOR_PREDICTION)
+            ax.scatter(over_est_col_obs, over_est_gt, s=s, marker='o', label='Ground Truth', color=COLOR_GROUND_TRUTH)
             y_label = 'Ground Truth Passenger Count'
           elif y_axis == 'pred':
             over_est_ss = [s * min(1, 1 / error) for error in over_est_errors]
-            ax.scatter(over_est_col_obs, over_est_pred, s=s, marker='o', label='Prediction', color='navy')
-            ax.scatter(over_est_col_obs, over_est_pred, s=over_est_ss, marker='o', label='Ground Truth', color='darkorange')
+            ax.scatter(over_est_col_obs, over_est_pred, s=s, marker='o', label='Prediction', color=COLOR_PREDICTION)
+            ax.scatter(over_est_col_obs, over_est_pred, s=over_est_ss, marker='o', label='Ground Truth', color=COLOR_GROUND_TRUTH)
             y_label = 'Predicted Truth Passenger Count'
           # model predictions too low (plot pred markers on top of gt markers)
           under_est_df = df[(df['pred_error'] < 0) & (df['day_type'] == day_type)]
@@ -290,13 +357,13 @@ class Evaluation:
           under_est_errors = under_est_df['pred_abs_error']
           if y_axis == 'gt':
             under_est_ss = [s * min(1, 1 / error) for error in under_est_errors]
-            ax.scatter(under_est_col_obs, under_est_gt, s=s, marker='o', color='darkorange')
-            ax.scatter(under_est_col_obs, under_est_gt, s=under_est_ss, marker='o', color='navy')
+            ax.scatter(under_est_col_obs, under_est_gt, s=s, marker='o', color=COLOR_GROUND_TRUTH)
+            ax.scatter(under_est_col_obs, under_est_gt, s=under_est_ss, marker='o', color=COLOR_PREDICTION)
             y_label = 'Ground Truth Passenger Count'
           elif y_axis == 'pred':
             under_est_ss = [s * max(1, error) for error in under_est_errors]
-            ax.scatter(under_est_col_obs, under_est_pred, s=under_est_ss, marker='o', color='darkorange')
-            ax.scatter(under_est_col_obs, under_est_pred, s=s, marker='o', color='navy')
+            ax.scatter(under_est_col_obs, under_est_pred, s=under_est_ss, marker='o', color=COLOR_GROUND_TRUTH)
+            ax.scatter(under_est_col_obs, under_est_pred, s=s, marker='o', color=COLOR_PREDICTION)
             y_label = 'Predicted Passenger Count'
           if plot == 'stop':
             ax.set_xticks(self.stop_pos_ls)
@@ -334,13 +401,13 @@ class Evaluation:
       over_est_errors = over_est_df['pred_abs_error']
       if y_axis == 'gt':
         over_est_ss = [s * max(1, error) for error in over_est_errors]
-        ax.scatter(over_est_timestamp_obs, over_est_gt, s=over_est_ss, marker='o', label='Prediction', color='navy')
-        ax.scatter(over_est_timestamp_obs, over_est_gt, s=s, marker='o', label='Ground Truth', color='darkorange')
+        ax.scatter(over_est_timestamp_obs, over_est_gt, s=over_est_ss, marker='o', label='Prediction', color=COLOR_PREDICTION)
+        ax.scatter(over_est_timestamp_obs, over_est_gt, s=s, marker='o', label='Ground Truth', color=COLOR_GROUND_TRUTH)
         y_label = 'Ground Truth Passenger Count'
       elif y_axis == 'pred':
         over_est_ss = [s * min(1, 1 / error) for error in over_est_errors]
-        ax.scatter(over_est_timestamp_obs, over_est_pred, s=s, marker='o', label='Prediction', color='navy')
-        ax.scatter(over_est_timestamp_obs, over_est_pred, s=over_est_ss, marker='o', label='Ground Truth', color='darkorange')
+        ax.scatter(over_est_timestamp_obs, over_est_pred, s=s, marker='o', label='Prediction', color=COLOR_PREDICTION)
+        ax.scatter(over_est_timestamp_obs, over_est_pred, s=over_est_ss, marker='o', label='Ground Truth', color=COLOR_GROUND_TRUTH)
         y_label = 'Predicted Passenger Count'
       # model predictions too low (plot pred markers on top of gt markers)
       under_est_df = df[(df['pred_error'] < 0)]
@@ -350,13 +417,13 @@ class Evaluation:
       under_est_errors = under_est_df['pred_abs_error']
       if y_axis == 'gt':
         under_est_ss = [s * min(1, 1 / error) for error in under_est_errors]
-        ax.scatter(under_est_timestamp_obs, under_est_gt, s=s, marker='o', color='darkorange')
-        ax.scatter(under_est_timestamp_obs, under_est_gt, s=under_est_ss, marker='o', color='navy')
+        ax.scatter(under_est_timestamp_obs, under_est_gt, s=s, marker='o', color=COLOR_GROUND_TRUTH)
+        ax.scatter(under_est_timestamp_obs, under_est_gt, s=under_est_ss, marker='o', color=COLOR_PREDICTION)
         y_label = 'Ground Truth Passenger Count'
       elif y_axis == 'pred':
         under_est_ss = [s * max(1, error) for error in under_est_errors]
-        ax.scatter(under_est_timestamp_obs, under_est_pred, s=under_est_ss, marker='o', color='darkorange')
-        ax.scatter(under_est_timestamp_obs, under_est_pred, s=s, marker='o', color='navy')
+        ax.scatter(under_est_timestamp_obs, under_est_pred, s=under_est_ss, marker='o', color=COLOR_GROUND_TRUTH)
+        ax.scatter(under_est_timestamp_obs, under_est_pred, s=s, marker='o', color=COLOR_PREDICTION)
         y_label = 'Predicted Passenger Count'
       ax.set_xlim(xmin=df['timestamp'].min().replace(microsecond=0, second=0, minute=0) - datetime.timedelta(hours=12), xmax=df['timestamp'].max().replace(microsecond=0, second=0, minute=0) + datetime.timedelta(hours=12))
       ax.set_xlabel('DateTime')
@@ -382,7 +449,7 @@ class Evaluation:
     return fig
     
     
-  def plot_feature_importance(self, ablate_features=False):
+  def plot_feature_importance(self, ablate_features=False, use_plotly=False):
     train_x = self.train.drop(columns=['passenger_count', 'passenger_count_pred'])
     train_y = self.train['passenger_count']
     test_x = self.test.drop(columns=['passenger_count', 'passenger_count_pred'])
@@ -426,14 +493,14 @@ class Evaluation:
       }
       for metric in metrics:
         fig, ax1 = plt.subplots(figsize=(20, 10))
-        ax1.plot(metrics_dict[metric], label=f'Test {metric} (left)', color='darkorange')
+        ax1.plot(metrics_dict[metric], label=f'Test {metric} (left)', color=COLOR_GROUND_TRUTH)
         ax1.set_xticks(range(model_importances.shape[0]))
         ax1.set_xticklabels(model_importances.index, rotation=90)
         ax1.set_ylabel(f'Test {metric}') 
         ax1.grid(which='major', axis='x', linestyle='--')
         ax2 = ax1.twinx()  
         ax2.set_ylabel('Training Time (s)') 
-        ax2.plot(subset_training_times, label='Training Times (Right)', color='navy')
+        ax2.plot(subset_training_times, label='Training Times (Right)', color=COLOR_PREDICTION)
         lines_1, labels_1 = ax1.get_legend_handles_labels()
         lines_2, labels_2 = ax2.get_legend_handles_labels()
         lines = lines_1 + lines_2
@@ -443,16 +510,32 @@ class Evaluation:
         fig_dict[metric] = fig
         plt.show()
     else:
-      fig, ax = plt.subplots(figsize=(20, 10))
-      model_importances.plot.bar(ax=ax, color='navy')
-      ax.set_title("Feature Importances")
-      if isinstance(model, RandomForestRegressor):
-        ax.set_ylabel("Importance (Gini)")
-      if isinstance(model, XGBRegressor):
-        ax.set_ylabel("Importance (Gain)")
-      if isinstance(model, Lasso):
-        ax.set_ylabel("Importance (Coefficient)")
-      fig.tight_layout()
-      fig_dict['Importance'] = fig
-      plt.show()
+      if use_plotly:
+        fig = px.bar(
+          model_importances
+        )
+        fig.update_layout(
+          title="Feature Importances",
+          xaxis_title="Feature"
+        )
+        if isinstance(model, RandomForestRegressor):
+          fig.update_layout(yaxis_title="Importance (Gini)")
+        if isinstance(model, XGBRegressor):
+          fig.update_layout(yaxis_title="Importance (Gain)")
+        if isinstance(model, Lasso):
+          fig.update_layout(yaxis_title="Importance (Coefficient)")
+        fig_dict['Importance'] = fig
+      else:
+        fig, ax = plt.subplots(figsize=(20, 10))
+        model_importances.plot.bar(ax=ax, color=COLOR_PREDICTION)
+        ax.set_title("Feature Importances")
+        if isinstance(model, RandomForestRegressor):
+          ax.set_ylabel("Importance (Gini)")
+        if isinstance(model, XGBRegressor):
+          ax.set_ylabel("Importance (Gain)")
+        if isinstance(model, Lasso):
+          ax.set_ylabel("Importance (Coefficient)")
+        fig.tight_layout()
+        fig_dict['Importance'] = fig
+        plt.show()
     return fig_dict['Importance'], fig_dict['MAE'], fig_dict['ME'], fig_dict['R^2']
