@@ -52,6 +52,7 @@ page()
 st.sidebar.write("""
 **Contributors:**  
 Alexander Amy  
-Anton Abilov  
+Anton Abilov
+Lars Kouwenhoven
 Sanket Shah  
 """)
