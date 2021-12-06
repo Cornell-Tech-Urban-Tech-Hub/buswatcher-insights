@@ -61,7 +61,7 @@ def get_shipments(route, months, years):
         print(route)
         for year in years:
             for month in months:
-                for day in range(1,2):
+                for day in range(1,32):
                     if month == 2:
                         if year % 4 == 0:
                             if day > 29:
