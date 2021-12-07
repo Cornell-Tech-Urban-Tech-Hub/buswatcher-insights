@@ -1,6 +1,7 @@
 import time
 import datetime
 import pandas as pd
+from plotly.subplots import make_subplots
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,6 +29,12 @@ import plotly.express as px
 
 COLOR_GROUND_TRUTH = 'darkorange'
 COLOR_PREDICTION = 'navy'
+
+def get_rgba_color(color, opacity=1):
+  if color == 'navy':
+    return f'rgba(0,0,128,{opacity})'
+  elif color == 'darkorange':
+    return f'rgba(255,140,0,{opacity})'
 
   
 def is_crowded(stop_id_pos, passenger_counts, stop_stats, method='mean', num_classes=2, spread_multiple=1):
@@ -286,7 +293,7 @@ class Evaluation:
     return fig_dict['Weekday'], fig_dict['Weekend'], fig_dict['DateTime']
 
 
-  def gt_pred_scatter(self, data, plot='simple', errors='all', n=1000, s=100, y_axis='gt', overlay_weather=False):
+  def gt_pred_scatter(self, data, plot='simple', errors='all', n=1000, s=100, y_axis='gt', overlay_weather=False, use_plotly=False):
     if data == 'train':
       df = self.global_feature_set_train.copy()
     elif data == 'val':
@@ -312,19 +319,46 @@ class Evaluation:
     if plot == 'simple':
       for day_type in day_types:
         if day_type in set(df['day_type']):
-          fig, ax = plt.subplots(figsize=(20, 20))
           gt = df[df['day_type'] == day_type]['passenger_count']
           pred = df[df['day_type'] == day_type]['passenger_count_pred']
-          ax.scatter(pred, gt, s=s, marker='o', color=COLOR_PREDICTION, alpha=0.25)
-          ax.set_xlim([min(gt.min(), pred.min()) - 5, max(gt.max(), pred.max()) + 5])
-          ax.set_ylim([min(gt.min(), pred.min()) - 5, max(gt.max(), pred.max()) + 5])
-          ax.plot(ax.get_xlim(), ax.get_xlim(), color=COLOR_GROUND_TRUTH, scalex=False, scaley=False)
-          ax.set_xlabel('Predicted Passenger Count')
-          ax.set_ylabel('Ground Truth Passenger Count')
-          ax.set_title(day_type)
-          fig.tight_layout()
-          fig_dict[day_type] = fig
-          plt.show()
+          plot_range = [min(gt.min(), pred.min()) - 5, max(gt.max(), pred.max()) + 5]
+          if use_plotly:
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+              x=pred,
+              y=gt, 
+              mode='markers',
+              name='Predictions',
+              marker_color=get_rgba_color(COLOR_PREDICTION, 0.25)
+            ))
+            fig.update_layout(
+              xaxis_title='Ground Truth Passenger Count',
+              yaxis_title='Predicted Passenger Count'
+            )
+            fig.update(
+              layout_xaxis_range = plot_range,
+              layout_yaxis_range = plot_range,
+            )
+            fig.add_trace(go.Scatter(
+              x=[x for x in np.arange(plot_range[0], plot_range[1], 0.5)],
+              y=[y for y in np.arange(plot_range[0], plot_range[1], 0.5)], 
+              mode='lines',
+              name='Ground truth',
+              marker_color=COLOR_GROUND_TRUTH
+            ))
+            fig_dict[day_type] = fig
+          else:
+            fig, ax = plt.subplots(figsize=(20, 20))
+            ax.scatter(pred, gt, s=s, marker='o', color=COLOR_PREDICTION, alpha=0.25)
+            ax.set_xlim(plot_range)
+            ax.set_ylim(plot_range)
+            ax.plot(ax.get_xlim(), ax.get_xlim(), color=COLOR_GROUND_TRUTH, scalex=False, scaley=False)
+            ax.set_xlabel('Predicted Passenger Count')
+            ax.set_ylabel('Ground Truth Passenger Count')
+            ax.set_title(day_type)
+            fig.tight_layout()
+            fig_dict[day_type] = fig
+            plt.show()
     elif (plot == 'stop') or (plot == 'hour'):
       if plot == 'stop':
         col = 'next_stop_id_pos'
@@ -492,23 +526,50 @@ class Evaluation:
        'R^2':subset_test_R2s
       }
       for metric in metrics:
-        fig, ax1 = plt.subplots(figsize=(20, 10))
-        ax1.plot(metrics_dict[metric], label=f'Test {metric} (left)', color=COLOR_GROUND_TRUTH)
-        ax1.set_xticks(range(model_importances.shape[0]))
-        ax1.set_xticklabels(model_importances.index, rotation=90)
-        ax1.set_ylabel(f'Test {metric}') 
-        ax1.grid(which='major', axis='x', linestyle='--')
-        ax2 = ax1.twinx()  
-        ax2.set_ylabel('Training Time (s)') 
-        ax2.plot(subset_training_times, label='Training Times (Right)', color=COLOR_PREDICTION)
-        lines_1, labels_1 = ax1.get_legend_handles_labels()
-        lines_2, labels_2 = ax2.get_legend_handles_labels()
-        lines = lines_1 + lines_2
-        labels = labels_1 + labels_2
-        ax1.legend(lines, labels)
-        fig.tight_layout()
-        fig_dict[metric] = fig
-        plt.show()
+        if use_plotly:
+          fig = make_subplots(specs=[[{'secondary_y': True}]])
+          fig.add_trace(go.Scatter(
+            x=model_importances.index,
+            y=metrics_dict[metric], 
+            mode='lines',
+            name=f'Test {metric} (left)',
+            marker_color=COLOR_GROUND_TRUTH
+          ))
+          fig.add_trace(
+            go.Scatter(
+              x=model_importances.index,
+              y=subset_training_times, 
+              mode='lines',
+              name=f'Training Times (Right)',
+              marker_color=COLOR_PREDICTION
+            ),
+            secondary_y=True
+          )
+          fig.update_layout(hovermode='x')
+          fig.update_yaxes(title_text=f'Test {metric}', secondary_y=False, showgrid=False)
+          fig.update_yaxes(title_text='Training Time (s)', secondary_y=True, showgrid=False, range=[
+            np.min(subset_training_times) - 0.05, 
+            np.max(subset_training_times) + 0.05, 
+          ])
+          fig_dict[metric] = fig
+        else:
+          fig, ax1 = plt.subplots(figsize=(20, 10))
+          ax1.plot(metrics_dict[metric], label=f'Test {metric} (left)', color=COLOR_GROUND_TRUTH)
+          ax1.set_xticks(range(model_importances.shape[0]))
+          ax1.set_xticklabels(model_importances.index, rotation=90)
+          ax1.set_ylabel(f'Test {metric}') 
+          ax1.grid(which='major', axis='x', linestyle='--')
+          ax2 = ax1.twinx()  
+          ax2.set_ylabel('Training Time (s)') 
+          ax2.plot(subset_training_times, label='Training Times (Right)', color=COLOR_PREDICTION)
+          lines_1, labels_1 = ax1.get_legend_handles_labels()
+          lines_2, labels_2 = ax2.get_legend_handles_labels()
+          lines = lines_1 + lines_2
+          labels = labels_1 + labels_2
+          ax1.legend(lines, labels)
+          fig.tight_layout()
+          fig_dict[metric] = fig
+          plt.show()
     else:
       if use_plotly:
         fig = px.bar(

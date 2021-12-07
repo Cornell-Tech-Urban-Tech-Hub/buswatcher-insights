@@ -21,7 +21,11 @@ def st_plot_passenger_count_by_time_of_day(_eval: Evaluation, data, segment=None
 
 @st.experimental_singleton
 def st_gt_pred_scatter(_eval: Evaluation, data, plot='simple', errors='all', n=1000, s=100, y_axis='gt', overlay_weather=False):
-    return _eval.gt_pred_scatter(data, plot, errors, n, s, y_axis, overlay_weather)
+    return _eval.gt_pred_scatter(data, plot, errors, n, s, y_axis, overlay_weather, use_plotly=True)
+
+@st.experimental_singleton
+def st_plot_feature_correlation(_eval: Evaluation, subset):
+    return _eval.plot_feature_correlation(subset=subset)
 
 
 def st_demo_weather():
@@ -214,7 +218,7 @@ def st_demo_weather():
     }
     subset = st.selectbox("Feature Subset", options=['All', 'Bus', 'Weather'])
     subset = subsets_dict[subset]
-    fig_corr = eval_xg_bus_weather.plot_feature_correlation(subset=subset)
+    fig_corr = st_plot_feature_correlation(eval_xg_bus_weather, subset)
     st.write(fig_corr)
 
     st.write(f"""
