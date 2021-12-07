@@ -58,6 +58,5 @@ st.sidebar.write("""
 **Contributors:**  
 Alexander Amy  
 Anton Abilov  
-Lars Kouwenhoven  
 Sanket Shah  
 """)
