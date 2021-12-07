@@ -25,7 +25,9 @@ def st_gt_pred_scatter(_eval: Evaluation, data, plot='simple', errors='all', n=1
 
 @st.experimental_singleton
 def st_plot_feature_correlation(_eval: Evaluation, subset):
-    return _eval.plot_feature_correlation(subset=subset)
+    fig = _eval.plot_feature_correlation(subset=subset, use_plotly=True)
+    fig.update_layout(width=700, height=700)
+    return fig
 
 
 def st_demo_weather():

@@ -472,14 +472,17 @@ class Evaluation:
     return fig_dict['Weekday'], fig_dict['Weekend'], fig_dict['DateTime'] 
 
 
-  def plot_feature_correlation(self, subset=None):
+  def plot_feature_correlation(self, subset=None, use_plotly=False):
     train = self.train.drop(columns=['passenger_count_pred'])
     if subset:
       corr = train[subset].corr()
     else:
       corr = train.corr()
-    fig, ax = plt.subplots(figsize=(20, 20))
-    sns.heatmap(corr, ax=ax, annot=True, fmt='.2g')
+    if use_plotly:
+      fig = px.imshow(corr)
+    else:
+      fig, ax = plt.subplots(figsize=(20, 20))
+      sns.heatmap(corr, ax=ax, annot=True, fmt='.2g')
     return fig
     
     
