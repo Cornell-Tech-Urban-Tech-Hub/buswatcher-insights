@@ -48,5 +48,5 @@ Alternatively, you can run the following commands to query, process, and save NY
 
 See `notebooks/demo.ipynb` for an example.
 
-# Streamlit Interface
+## Streamlit Interface
 Run streamlit app `streamlit run st_main.py`
