@@ -71,8 +71,7 @@ def st_demo_weather():
         ### The Data
     """)
 
-    # st.dataframe(eval_xg_bus_weather.train.drop(columns='passenger_count_pred').head())
-    st.dataframe(eval_xg_bus_weather.global_feature_set.head())
+    st.dataframe(eval_xg_bus_weather.global_feature_set.drop(columns=['day', 'month', 'year', 'DoW', 'hour', 'minute']).head())
 
     st.write("""
     We sourced our weather data from the station at JFK, which we accessed through the [VisualCrossing Weather API](https://www.visualcrossing.com/weather-api)
