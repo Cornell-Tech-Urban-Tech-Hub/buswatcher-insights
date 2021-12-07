@@ -1,5 +1,5 @@
 # BusWatcher Insights
-**BusWatcher Insights** is an open-source project and [Public Interface](https://cornell-tech-urban-tech-hub.github.io/buswatcher-insights/) which aims to build a set of tools for analyzing and predicting bus ridership in New York City, powered by [NYCBusWatcher](https://github.com/Cornell-Tech-Urban-Tech-Hub/nycbuswatcher) and other publicly available urban data sources. It is an open-source collaboration between students at Cornell Tech and [the Urban Tech Hub](https://urban.tech.cornell.edu/).
+**BusWatcher Insights** is an open-source project and [public interface](https://cornell-tech-urban-tech-hub.github.io/buswatcher-insights/) which aims to build a set of tools for analyzing and predicting bus ridership in New York City, powered by [NYCBusWatcher](https://github.com/Cornell-Tech-Urban-Tech-Hub/nycbuswatcher) and other publicly available urban data sources. It is an open-source collaboration between students at Cornell Tech and [the Urban Tech Hub](https://urban.tech.cornell.edu/).
 
 This repository facilitates an end-to-end workflow by providing modular utilities and methods for fetching / processing data, designing / running experiments, and evaluating / visualizing results.
 
